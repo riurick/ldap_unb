@@ -35,15 +35,17 @@ class LdapUnbPlugin < Noosfero::Plugin
         ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
         login = params[:profile_data][:matricula]
         password = params[:user][:password]
+        aux = "good!"
         begin
           attrs = ldap.authenticate(login, password)
         rescue Net::LDAP::LdapError => e
           puts "LDAP is not configured correctly"
+          aux = "bad!"
         end
 
         if !attrs 
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _(login+' validation failed.'))
+          @person.errors.add(:matricula, _(aux + ' validation failed.'))
           render :action => :signup
         end
       end
