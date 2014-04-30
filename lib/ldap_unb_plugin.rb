@@ -5,7 +5,7 @@ class LdapUnbPlugin < Noosfero::Plugin
   end
 
   def self.plugin_description
-    _("A plugin that adds ldap support.")
+    _("Plugin de suporte ao LDAP-UnB.")
   end
 
   def allow_user_registration
@@ -43,7 +43,7 @@ class LdapUnbPlugin < Noosfero::Plugin
 
         if !attrs 
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _(' validation failed'))
+          @person.errors.add(:matricula, _(login+' validation failed.'))
           render :action => :signup
         end
       end
