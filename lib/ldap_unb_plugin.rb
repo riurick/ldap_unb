@@ -27,25 +27,26 @@ class LdapUnbPlugin < Noosfero::Plugin
       javascript_include_tag('../plugins/ldap_unb/javascripts/jquery.balloon')
     }
   end
-  
+
   def account_controller_filters
+
     environment = context.environment
     block = lambda do
       if request.post?
         ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
-        login = params[:profile_data][:matricula]
-        password = params[:user][:password]
-        aux = "good!"
+        login = context.params[:profile_data][:matricula]
+        password = context.params[:user][:password]
+        #aux = "good!"
         begin
           attrs = ldap.authenticate(login, password)
         rescue Net::LDAP::LdapError => e
           puts "LDAP is not configured correctly"
-          aux = "bad!"
+         # aux = "bad!"
         end
 
         if !attrs 
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _(aux + ' validation failed.'))
+          @person.errors.add(:matricula, _(attrs + ' validation failed.'))
           render :action => :signup
         end
       end
@@ -55,6 +56,7 @@ class LdapUnbPlugin < Noosfero::Plugin
       :method_name => 'validate_matricula',
       :options => {:only => 'signup'},
       :block => block}]
+
   end
 
   def login_extra_contents
@@ -64,7 +66,8 @@ class LdapUnbPlugin < Noosfero::Plugin
     }
   end
 
-  def alternative_athentication
+  def alternative_authentication
+      
 =begin
     environment = context.environment
     person = Person.find_by_matricula(params[:user][:login])
@@ -98,11 +101,13 @@ class LdapUnbPlugin < Noosfero::Plugin
     end
     user
 =end
-    person = Person.find_by_matricula(params[:user][:login])
+    environment = context.environment
+    
+    person = Person.find_by_matricula(context.params[:user][:login])
     if person
-      user = User.authenticate(person.user.login, params[:user][:password])
+      user = User.authenticate(person.user.login, context.params[:user][:password])
     else
-      user = User.authenticate(params[:user][:login], params[:user][:password])
+      user = User.authenticate(context.params[:user][:login], context.params[:user][:password])
     end
     user
   end
