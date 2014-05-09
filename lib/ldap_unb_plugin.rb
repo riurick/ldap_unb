@@ -31,23 +31,24 @@ class LdapUnbPlugin < Noosfero::Plugin
   end
 
   def account_controller_filters
-    
+    local_context = context
     block = lambda do
       if request.post?
-        ldap = LdapAuthentication.new(context.environment.ldap_unb_plugin_attributes)
-        login = context.params[:profile_data][:matricula]
-        password = context.params[:user][:password]
-=begin
+        ldap = LdapAuthentication.new(local_context.environment.ldap_unb_plugin_attributes)
+        login = local_context.params[:profile_data][:matricula]
+        password = local_context.params[:user][:password]
+        erro = ""
+
         begin
-          attrs = ldap.authenticate(login, password)
+          auth = ldap.authenticate(login, password)
         rescue Net::LDAP::LdapError => e
           puts "LDAP is not configured correctly"
+          erro = "Error!"
         end
-=end
-        if ldap.authenticate(login, password).nil?
+        if !auth
           
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _( ' validation failed.'))
+          @person.errors.add(:matricula, _( erro +' validation failed.'))
           render :action => :signup
         end
       end
