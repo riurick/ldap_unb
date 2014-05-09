@@ -13,7 +13,7 @@ class AccountControllerPluginTest < ActionController::TestCase
     @environment = Environment.default
     @environment.enabled_plugins = ['LdapUnbPlugin']
     @ldap_config = load_ldap_config
-    @environment.ldap_plugin= @ldap_config['server'] unless @ldap_config.nil?
+    @environment.ldap_unb_plugin= @ldap_config['server'] unless @ldap_config.nil?
     @environment.save!
   end
 

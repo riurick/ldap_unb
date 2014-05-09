@@ -1,3 +1,5 @@
+require File.dirname(__FILE__) + '/ldap_authentication.rb'
+
 class LdapUnbPlugin < Noosfero::Plugin
 
   def self.plugin_name
@@ -29,24 +31,23 @@ class LdapUnbPlugin < Noosfero::Plugin
   end
 
   def account_controller_filters
-
-    environment = context.environment
+    
     block = lambda do
       if request.post?
-        ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
+        ldap = LdapAuthentication.new(context.environment.ldap_unb_plugin_attributes)
         login = context.params[:profile_data][:matricula]
         password = context.params[:user][:password]
-        #aux = "good!"
+=begin
         begin
           attrs = ldap.authenticate(login, password)
         rescue Net::LDAP::LdapError => e
           puts "LDAP is not configured correctly"
-         # aux = "bad!"
         end
-
-        if !attrs 
+=end
+        if ldap.authenticate(login, password).nil?
+          
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _(attrs + ' validation failed.'))
+          @person.errors.add(:matricula, _( ' validation failed.'))
           render :action => :signup
         end
       end
@@ -57,21 +58,22 @@ class LdapUnbPlugin < Noosfero::Plugin
       :options => {:only => 'signup'},
       :block => block}]
 
+ 
   end
-
+=begin
   def login_extra_contents
     lambda {
       content_tag('div', labelled_form_field(_('Username / Matrícula'), text_field_tag('login', '', :id => 'matricula_field_login')) +
       labelled_form_field(_('Password'), password_field_tag('password', '', :id => 'matricula_field_password')), :id => 'matricula-login-fields')
     }
   end
-
+=end
   def alternative_authentication
       
 =begin
     environment = context.environment
     person = Person.find_by_matricula(params[:user][:login])
-    ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
+    ldap = LdapAuthentication.new(environment.ldap_unb_plugin_attributes)
     login = params[:user][:login]
     password = params[:user][:password]
     begin
@@ -83,7 +85,7 @@ class LdapUnbPlugin < Noosfero::Plugin
     if person && attrs
       user = User.authenticate(person.user.login, params[:user][:password])  
     else
-      ldap = LdapAuthentication.new(environment.ldap_plugin_attributes)
+      ldap = LdapAuthentication.new(environment.ldap_unb_plugin_attributes)
       login = User.find_by_login(params[:user][:login]).person.matricula
       password = params[:user][:password]
       
@@ -101,7 +103,6 @@ class LdapUnbPlugin < Noosfero::Plugin
     end
     user
 =end
-    environment = context.environment
     
     person = Person.find_by_matricula(context.params[:user][:login])
     if person
