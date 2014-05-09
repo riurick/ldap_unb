@@ -35,20 +35,33 @@ class LdapUnbPlugin < Noosfero::Plugin
     block = lambda do
       if request.post?
         ldap = LdapAuthentication.new(local_context.environment.ldap_unb_plugin_attributes)
-        login = local_context.params[:profile_data][:matricula]
-        password = local_context.params[:user][:password]
-        erro = ""
+        login = params[:profile_data][:matricula]
+        password = params[:user][:password]
 
         begin
           auth = ldap.authenticate(login, password)
         rescue Net::LDAP::LdapError => e
           puts "LDAP is not configured correctly"
-          erro = "Error!"
         end
-        if !auth
-          
+        if auth
+          user.login = login
+          user.email = attrs[:mail]
+          user.name =  attrs[:fullname]
+          user.password = password
+          user.password_confirmation = password
+          user.person_data = params[:profile_data]
+          user.activated_at = Time.now.utc
+          user.activation_code = nil
+
+          ldap = LdapAuthentication.new(context.environment.ldap_plugin_attributes)
+          begin
+            user = nil unless user.save
+          rescue
+            #User not saved
+          end  
+	else  
           @person = Person.new(:environment => environment)
-          @person.errors.add(:matricula, _( erro +' validation failed.'))
+          @person.errors.add(:matricula, _(' validation failed.'))
           render :action => :signup
         end
       end
