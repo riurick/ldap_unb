@@ -44,8 +44,7 @@ class LdapUnbPlugin < Noosfero::Plugin
           puts "LDAP is not configured correctly"
         end
         if !auth
-         
-          @person = Person.new(:environment => environment)
+         @person = Person.new(:environment => environment)
           @person.errors.add(:matricula, _(' validation failed.'))
           render :action => :signup
         end
@@ -68,7 +67,6 @@ class LdapUnbPlugin < Noosfero::Plugin
   end
 =end
   def alternative_authentication
-      
 =begin
     environment = context.environment
     person = Person.find_by_matricula(params[:user][:login])
@@ -109,7 +107,21 @@ class LdapUnbPlugin < Noosfero::Plugin
     else
       user = User.authenticate(context.params[:user][:login], context.params[:user][:password])
     end
+    if user
+        matricula = user.person.matricula
+        password = context.params[:user][:password]
+        ldap = LdapAuthentication.new(local_context.environment.ldap_unb_plugin_attributes)
+        begin
+          auth = ldap.authenticate(matricula, password)
+        rescue Net::LDAP::LdapError => e
+          puts "LDAP is not configured correctly"
+        end
+        if !auth
+          user = nil
+        end
+    end
     user
+
   end
 
   def profile_info_extra_contents
